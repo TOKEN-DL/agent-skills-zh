@@ -1,0 +1,81 @@
+name: Skill 空白 / 不适用
+description: 当某个 Skill 的指引错了、过期了、或在你的项目里完全不适用时反馈。
+title: "[skill-gap]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        当一个 Skill 给出了错误、过期、或与生态不匹配的指引时使用本表单。
+        回答保持简短，给维护者足够上下文做分流即可，不必长篇大论。
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: 受影响的 Skill
+      description: 哪个 Skill 没有按预期工作？
+      options:
+        - chinese-api-and-interface-design
+        - chinese-browser-testing-with-devtools
+        - chinese-ci-cd-and-automation
+        - chinese-code-review-and-quality
+        - chinese-code-simplification
+        - chinese-constraint-driven-development
+        - chinese-context-engineering
+        - chinese-debugging-and-error-recovery
+        - chinese-deprecation-and-migration
+        - chinese-documentation-and-adrs
+        - chinese-doubt-driven-development
+        - chinese-frontend-ui-engineering
+        - chinese-git-workflow-and-versioning
+        - chinese-idea-refine
+        - chinese-incremental-implementation
+        - chinese-interview-me
+        - chinese-observability-and-instrumentation
+        - chinese-performance-optimization
+        - chinese-planning-and-task-breakdown
+        - chinese-security-and-hardening
+        - chinese-shipping-and-launch
+        - chinese-source-driven-development
+        - chinese-spec-driven-development
+        - chinese-test-driven-development
+        - chinese-using-agent-skills
+        - other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: excerpt
+    attributes:
+      label: 相关指引或摘录
+      description: 粘贴 `SKILL.md`（或引用的 reference）里那段误导了 Agent、或不适用的句子。
+      placeholder: 例如：verification 清单说跑 `npm test`
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 项目上下文
+      description: 语言、构建工具、测试运行器、或其它与本次反馈相关的约定。
+      placeholder: 例如：Java 21、Maven、JUnit 5
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-failed
+    attributes:
+      label: 哪里不工作或不适用
+      description: Agent 照着 Skill 走时发生了什么？哪里错或不相关？
+      placeholder: 例如：Agent 在 Maven 仓库里硬要跑 npm 脚本，但根本没有 package.json
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: 你怎么绕过去的
+      description: 你（或 Agent）是怎么解锁的？可选，但非常有帮助。
+      placeholder: 例如：让 Agent 跑 `./mvnw test`，无视 npm 那份清单
+    validations:
+      required: false

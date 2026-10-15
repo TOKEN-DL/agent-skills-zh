@@ -1,0 +1,20 @@
+﻿# 临时文件
+*.tmp
+*.bak
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+Thumbs.db
+.DS_Store
+
+# node（未来可能加）
+node_modules/
+npm-debug.log*
+
+# 翻译产物的可还原源
+$TEMP/

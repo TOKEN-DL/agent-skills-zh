@@ -1,0 +1,32 @@
+﻿description = "定义并强制本项目的质量基线，访谈、合理默认值、CONSTRAINTS.md"
+
+prompt = """
+调用 constraint-driven-development Skill。
+
+$ARGUMENTS
+
+无参数时的默认行为：为该仓库设置约束。
+
+1. **先检测。** 读 package.json / pyproject.toml / go.mod、测试运行器、既有 lint 配置、当前覆盖率输出、CI 工作流以及所用的 Agent harness。用两行报告你看到的东西。绝不要求你能读到的东西。
+
+2. **访谈，至多四个问题。** 一次一个，每个都附上你的最佳猜测与一个可用的默认值，这样"我不知道"也能产出可用配置：
+   - 在底线上之外，再覆盖哪些维度（覆盖率、安全、性能、可访问性、架构）
+   - 任务中间一项检查失败时是阻断还是警告
+   - 是给出目标数字，还是只测今天值并守住
+   - 把工作交回前可容忍的最慢检查时长
+
+3. **在仓库根写 CONSTRAINTS.md**，包含 Floor 段、强制数字、仅测今天值的度量项及其当前值，外加一个含 owner 与到期日期的例外表。每个数字都要说明理由。
+
+4. **为每个选定的维度装上工具。** 一个有数字但无工具的数字只是愿望。用事实上的工具，让既有配置继续工作：Semgrep 跑代码扫描，gitleaks（始终 `--redact`）跑机密扫描，osv-scanner 跑依赖扫描，axe-core 跑可访问性，Lighthouse 跑 Web Vitals，size-limit 跑包大小，dependency-cruiser 跑边界，Stryker 跑断言质量。把精确命令写在 CONSTRAINTS.md 中每条规则旁。可访问性与性能需要可运行的 URL；若项目没有，明确说明并去掉该维度，而不是造一个检查。把这些命令加进 package.json 作为 check:fast / check:task / check:full。
+
+5. **按成本放置每项检查。** 类型、lint 与机密扫描放编辑循环（秒级）。相关测试与变更行覆盖率放在任务末尾（90 秒以下）。其余放在 review 或 CI。把检查范围限定在 diff，而不是整仓库。
+
+6. **把 Agent 指向它。** 在 AGENTS.md 和 GEMINI.md 加一行，告诉 Agent 读 CONSTRAINTS.md，永远不要为了过一项改动而削弱它。
+
+7. **验证。** 对当前分支跑约束。若有用户反对的失败项，现在就修约束本身，不要留下一道人们会学着绕过的关卡。
+
+子命令：
+- `/constraints check` ， 对当前分支跑一遍现有约束并报告
+- `/constraints guard` ， 检查 diff 是否有"被削弱的基线"：阈值被调低、测试被跳过或删除、新的抑制注释、未完成的桩、新的例外
+- `/constraints ratchet` ， 把今天测得的值记为不得下跌的基线
+"""

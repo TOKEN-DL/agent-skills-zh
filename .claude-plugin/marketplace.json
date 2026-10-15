@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "addy-agent-skills",
+  "description": "面向 AI 编程 Agent 的生产级工程 Skill，覆盖从规格到上线的完整软件开发生命周期。",
+  "owner": {
+    "name": "Addy Osmani",
+    "url": "https://github.com/addyosmani"
+  },
+  "plugins": [
+    {
+      "name": "agent-skills",
+      "version": "0.6.13",
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills"
+      },
+      "description": "覆盖完整软件开发阶段的生产级工程 Skill：规格、规划、构建、验证、评审、上线。",
+      "homepage": "https://github.com/addyosmani/agent-skills",
+      "license": "MIT",
+      "keywords": ["skills", "agents", "engineering", "spec", "tdd", "review", "ship"]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+﻿description = "通过并行扇出到专家 persona 跑发布前检查清单，再综合得出 go / no-go 决策"
+
+prompt = """
+调用 shipping-and-launch Skill。
+
+`/ship` 是一个**扇出编排器**。它对当前改动并行跑三位专家 persona，再把它们的报告合并为一份 go / no-go 决策与回滚计划。Persona 彼此独立，无共享状态、无顺序依赖，这正是并行执行在此处既安全又有用的原因。
+
+## 阶段 A ， 并行扇出
+
+并发派生三个子 Agent。该 CLI 把 `agents/` 中每个自定义子 Agent 暴露为同名工具，因此 `code-reviewer.md` 变成主 Agent 可调用的 `code-reviewer` 工具，`@code-reviewer` 在 prompt 中作为显式调用。**在同一条 assistant 轮次中发出全部三个子 Agent 工具调用，使它们真正并行**，顺序调用会让本命令失去意义。
+
+按工具名调度每个 persona：
+
+1. **`code-reviewer`** ， 对已暂存改动或最近提交做五维度评审（正确性、可读性、架构、安全、性能）。输出标准评审模板。
+2. **`security-auditor`** ， 做漏洞与威胁建模。检查 OWASP Top 10、机密处理、鉴权 / 授权、依赖 CVE。输出标准审计报告。
+3. **`test-engineer`** ， 分析本次改动的测试覆盖。识别快乐路径、边界情况、错误路径与并发场景的覆盖缺口。输出标准覆盖分析。
+
+若当前 CLI 版本不支持子 Agent，在主上下文中顺序调用每个 persona 的系统提示词，把它们的输出视作并行返回，合并阶段照常工作。
+
+约束（出自该 CLI 的子 Agent 模型）：
+- 子 Agent 在隔离的上下文循环中运行，只把报告返回给当前主会话。
+- 不要让一个 persona 把活委托给另一个，保持扇出扁平。
+- 想要更丰富的多 Agent 协作（队友彼此沟通而不是只发汇报），参见 `references/orchestration-patterns.md`。
+
+**Persona 解析。** 若你在 `agents/` 或全局配置中定义了自己的 `code-reviewer`、`security-auditor` 或 `test-engineer`，它们优先于本插件的版本，`/ship` 会自动拾取你的定制。这是设计上的取舍：插件子 Agent 排在 CLI 作用域优先级表的底端，用户级定义按设计胜出。
+
+## 阶段 B ， 在主上下文中合并
+
+三份报告回来后，由主 Agent（而非子 persona）综合：
+
+1. **代码质量（Code Quality）** ， 聚合来自 `code-reviewer` 的 Critical / Required 发现，以及任何失败的测试、lint、构建输出。去除评审者之间的重复项。
+2. **安全（Security）** ， 把任何来自 `security-auditor` 的 Critical / High 发现升格为发布阻断器。与 `code-reviewer` 的安全维度交叉引用。
+3. **性能（Performance）** ， 取自 `code-reviewer` 的性能维度；适用时交叉核对 Core Web Vitals。
+4. **可访问性（Accessibility）** ， 校验键盘导航、屏幕阅读器支持、对比度（三位 persona 不覆盖，在这里直接处理，或调用可访问性检查清单）。
+5. **基础设施（Infrastructure）** ， 环境变量、迁移、监控、特性开关。直接验证。
+6. **文档（Documentation）** ， README、ADR、changelog。直接验证。
+
+## 阶段 C ， 决策与回滚
+
+产出单一输出：
+
+```markdown
+## 发布决策：GO | NO-GO
+
+### 必须修复的阻断项（发布前必须修复）
+- [来源 persona：Critical 发现 + file:line]
+
+### 建议修复（发布前最好修复）
+- [来源 persona：重要发现 + file:line]
+
+### 已承认的风险（仍要发布）
+- [风险 + 缓解]
+
+### 回滚计划
+- 触发条件：[什么信号会引发回滚]
+- 回滚步骤：[精确步骤]
+- 恢复时间目标（RTO）：[目标]
+
+### 专家报告（完整）
+- [code-reviewer 报告]
+- [security-auditor 报告]
+- [test-engineer 报告]
+```
+
+## 规则
+
+1. 阶段 A 的三个 persona 必须并行，绝不能串行。
+2. Persona 彼此不调用。合并由主 Agent 在阶段 B 完成。
+3. 任何 GO 决策前必须先有回滚计划。
+4. 若任一 persona 返回 Critical 发现，默认裁决为 NO-GO，除非用户明确接受该风险。
+5. **仅当以下全部成立时才跳过扇出，改动本数 ≤ 2、diff < 50 行；且不涉及鉴权、支付、数据访问或 config / env。** 否则默认扇出。`/ship` 为可投产的改动而设计，当波及面不可忽视，即便 diff 看起来小，也跑并行评审。
+"""
